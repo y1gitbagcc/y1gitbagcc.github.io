@@ -6,95 +6,137 @@
     <title>Swarm UAV Workspace — PX4 + ROS2 + Python</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* Varsayılan Tema: Aydınlık (RACLAB Kurumsal) */
         :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: #161d2e;
-            --bg-card-hover: #1c2540;
-            --accent: #38bdf8;
-            --accent-dim: rgba(56, 189, 248, 0.12);
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --accent: #0284c7; /* Akademik Mavi */
+            --accent-dim: rgba(2, 132, 199, 0.08);
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
             --text-dim: #64748b;
-            --border: rgba(56, 189, 248, 0.1);
-            --border-hover: rgba(56, 189, 248, 0.3);
-            --green: #34d399;
-            --amber: #fbbf24;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --green: #059669;
+            --amber: #d97706;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --grid-color: rgba(100, 116, 139, 0.05);
+        }
+
+        /* Karanlık Tema: Kurumsal / Akademik (Siber değil, mat ve profesyonel) */
+        [data-theme="dark"] {
+            --bg-primary: #0f172a; /* Koyu Arduvaz / Gece Mavisi (Zift siyahı değil) */
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b; /* Mat Kart Arka Planı */
+            --bg-card-hover: #334155;
+            --accent: #38bdf8; /* Okunabilir açık mavi (Neon değil) */
+            --accent-dim: rgba(56, 189, 248, 0.1);
+            --text-primary: #f8fafc; /* Kırık Beyaz */
+            --text-secondary: #cbd5e1; /* Mat Gri */
+            --text-dim: #94a3b8;
+            --border: #334155; /* Yumuşak kart sınırları */
+            --border-hover: #475569;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+            --grid-color: rgba(255, 255, 255, 0.03); /* Çok hafif beyaz ızgara */
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             background: var(--bg-primary);
             color: var(--text-primary);
             font-family: 'DM Sans', sans-serif;
             line-height: 1.7;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Grid Background */
         body::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: 60px 60px; pointer-events: none; z-index: 0;
+            transition: background-image 0.3s ease;
         }
 
         .container { max-width: 900px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
         
+        /* Tema Değiştirme Butonu */
+        .theme-toggle {
+            position: absolute; top: 24px; right: 24px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            color: var(--text-primary); padding: 10px; border-radius: 50%;
+            cursor: pointer; box-shadow: var(--shadow); transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .theme-toggle:hover { transform: scale(1.1); border-color: var(--accent); }
+        .theme-toggle svg { width: 20px; height: 20px; }
+
         /* Hero Section */
-        .hero { padding: 80px 0 60px; }
+        .hero { padding: 80px 0 60px; text-align: center; }
         .tag {
             display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
-            background: var(--accent-dim); border: 1px solid var(--border);
+            background: var(--accent-dim); border: 1px solid rgba(2, 132, 199, 0.2);
             border-radius: 100px; font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem; color: var(--accent); margin-bottom: 28px;
+            font-size: 0.75rem; color: var(--accent); margin-bottom: 24px; font-weight: 500;
         }
-        .tag .pulse { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        [data-theme="dark"] .tag { border-color: rgba(56, 189, 248, 0.2); }
+        
+        .tag .pulse { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        h1 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 700; margin-bottom: 20px; }
-        h1 .highlight { background: linear-gradient(135deg, var(--accent), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-desc { font-size: 1.1rem; color: var(--text-secondary); max-width: 640px; }
+        h1 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 700; margin-bottom: 20px; color: var(--text-primary); }
+        h1 .highlight { color: var(--accent); }
+        .hero-desc { font-size: 1.1rem; color: var(--text-secondary); max-width: 640px; margin: 0 auto; }
 
-        .hero-links { display: flex; gap: 12px; margin-top: 32px; }
+        .hero-links { display: flex; gap: 12px; margin-top: 32px; justify-content: center; }
         .btn {
             display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px;
-            border-radius: 10px; font-weight: 600; text-decoration: none; transition: 0.25s;
+            border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.2s ease;
             background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);
+            box-shadow: var(--shadow);
         }
         .btn:hover { border-color: var(--border-hover); background: var(--bg-card-hover); transform: translateY(-2px); }
 
         /* Sections */
         section { padding: 50px 0; }
-        .section-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
-        h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; margin-bottom: 24px; }
+        .section-label { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.05em; }
+        h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; margin-bottom: 24px; color: var(--text-primary); }
 
         /* Status & Roadmap Card */
-        .status-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 28px 32px; }
-        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 100px; background: rgba(52, 211, 153, 0.1); color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; margin-bottom: 16px; }
+        .status-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; box-shadow: var(--shadow); transition: background-color 0.3s, border-color 0.3s; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 100px; background: rgba(5, 150, 105, 0.1); color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-bottom: 16px; font-weight: 600; }
         
-        .roadmap-box { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
-        .roadmap-label { color: var(--amber); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 8px; }
+        .roadmap-box { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); transition: border-color 0.3s; }
+        .roadmap-label { color: var(--amber); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 8px; font-weight: 600; }
 
         /* Video Embed */
-        .demo-embed { position: relative; width: 100%; padding-bottom: 56.25%; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: #000; margin-top: 16px; }
+        .demo-embed { position: relative; width: 100%; padding-bottom: 56.25%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #000; margin-top: 16px; box-shadow: var(--shadow); transition: border-color 0.3s; }
         .demo-embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
         /* Grid & Components */
-        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; }
-        .metric { background: rgba(56, 189, 248, 0.04); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
-        .metric-value { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+        .metric { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; transition: background-color 0.3s, border-color 0.3s; }
+        .metric-value { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent); }
         
-        /* ÖNEMLİ: Animasyonların takılmasını önlemek için görünürlük ayarı */
-        .fade-in { opacity: 1; transform: translateY(0); transition: 0.6s ease; }
+        .fade-in { opacity: 1; transform: translateY(0); }
         
-        footer { padding: 50px 0; border-top: 1px solid var(--border); margin-top: 40px; }
-        .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border-hover), transparent); margin: 10px 0; }
+        footer { padding: 40px 0; border-top: 1px solid var(--border); margin-top: 20px; text-align: center; transition: border-color 0.3s; }
+        .divider { height: 1px; background: var(--border); margin: 20px 0; transition: background 0.3s; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Theme">
+        <svg id="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg id="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+
     <div class="hero">
         <div class="tag"><span class="pulse"></span> Under Active Development</div>
         <h1><span class="highlight">Swarm UAV</span> Workspace</h1>
@@ -110,7 +152,7 @@
     <div class="divider"></div>
 
     <section class="fade-in">
-        <div class="section-label">// Current Status</div>
+        <div class="section-label">Current Status</div>
         <div class="status-card">
             <div class="status-badge">In Progress</div>
             <p style="color: var(--text-secondary); font-size: 0.95rem;">
@@ -118,7 +160,7 @@
             </p>
             
             <div class="roadmap-box">
-                <span class="roadmap-label">🚀 Open Source Roadmap</span>
+                <span class="roadmap-label">Open Source Roadmap</span>
                 <p style="color: var(--text-secondary); font-size: 0.9rem;">
                     This project is developed for the <strong>Teknofest 2026 Swarm UAV Competition</strong>. To maintain competition integrity and confidentiality, the source code will be made <strong>fully open-source</strong> after the final stage.
                 </p>
@@ -132,7 +174,7 @@
     </section>
 
     <section class="fade-in">
-        <div class="section-label">// Demo</div>
+        <div class="section-label">Demo</div>
         <h2>Formation Flight in Action</h2>
         <div class="demo-embed">
             <iframe src="https://www.youtube.com/embed/ofARun855CY" title="Swarm UAV Demo" allowfullscreen></iframe>
@@ -140,10 +182,45 @@
     </section>
 
     <footer>
-        <div style="font-family: 'Space Grotesk'; font-weight: 600;">Hüseyin Yiğit Bağcı</div>
-        <div style="font-size: 0.82rem; color: var(--text-dim);">EEE, 3rd Year — Konya Technical University · RACLAB</div>
+        <div style="font-family: 'Space Grotesk'; font-weight: 600; color: var(--text-primary);">Hüseyin Yiğit Bağcı</div>
+        <div style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">EEE, 3rd Year — Konya Technical University · RACLAB</div>
     </footer>
 </div>
+
+<script>
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
+    const moonIcon = document.getElementById('moon-icon');
+    const sunIcon = document.getElementById('sun-icon');
+
+    const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
+    if (currentTheme) {
+        htmlElement.setAttribute('data-theme', currentTheme);
+        if (currentTheme === 'dark') {
+            moonIcon.style.display = 'none';
+            sunIcon.style.display = 'block';
+        }
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        htmlElement.setAttribute('data-theme', 'dark');
+        moonIcon.style.display = 'none';
+        sunIcon.style.display = 'block';
+    }
+
+    themeToggleBtn.addEventListener('click', function() {
+        let theme = htmlElement.getAttribute('data-theme');
+        if (theme === 'dark') {
+            htmlElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+            moonIcon.style.display = 'block';
+            sunIcon.style.display = 'none';
+        } else {
+            htmlElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+            moonIcon.style.display = 'none';
+            sunIcon.style.display = 'block';
+        }
+    });
+</script>
 
 </body>
 </html>
